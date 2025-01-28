@@ -3,8 +3,8 @@ name: Weekly Create and Share Labmeeting Slides
 
 on:
   schedule:
-    # Runs at 17:00 AM UTC (15:00 Turku) every Monday
-    - cron: '0 17 * * 1'
+    # Runs at 13:00 AM UTC (15:00 Turku) every Monday
+    - cron: '0 13 * * 1'
   workflow_dispatch:
 
 jobs:
