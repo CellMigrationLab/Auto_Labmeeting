@@ -3,7 +3,11 @@ import argparse
 
 # Main function
 def main(token, channel):
-    message = '/poll "Would you like to go this Friday for a together lunch?" "Yes :white_check_mark:" "No :x:" no-preview'
+    message = """
+                Would you like to go this Friday for a together lunch?
+                :+1:  : Yes, count on me!
+                :-1:  : Nah, not this time :(
+            """
     send_slack_message(token, channel, message)
 
 if __name__ == "__main__":
