@@ -3,9 +3,16 @@ name: Weekly Create and Share Labmeeting Slides
 
 on:
   schedule:
-    # Runs at 13:00 AM UTC (15:00 Turku) every Monday
-    - cron: '0 13 * * 1'
-  workflow_dispatch:
+    # Runs at 12:00 AM UTC (15:00 Turku) every Monday
+    - cron: '0 12 * * 1'
+  workflow_dispatch: 
+    # Allows manual triggering of the workflow
+    # Manually pass the date as an input
+    inputs:
+      date:
+        description: 'Date for the lab meeting slides (YYYY-MM-DD)'
+        required: false
+        default: ''
 
 jobs:
   send_slack_reminder:
@@ -27,6 +34,7 @@ jobs:
 
     - name: Get the next Monday date
       id: get_date
+      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.date == '' }}
       run: |
         output=$(python3 scripts/calculate_next_monday.py)
         echo "date=$output" >> $GITHUB_OUTPUT
@@ -37,4 +45,4 @@ jobs:
         SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
         SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
       run: |
-        python scripts/create_labmeeting_slides.py --token $SLACK_TOKEN --channel $SLACK_CHANNEL --date ${{ steps.get_date.outputs.date }}
+        python scripts/create_labmeeting_slides.py --token $SLACK_TOKEN --channel $SLACK_CHANNEL --date ${{ github.event.inputs.date != '' && github.event.inputs.date || steps.get_date.outputs.date }}
