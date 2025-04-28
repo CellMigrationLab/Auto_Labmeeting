@@ -34,7 +34,6 @@ jobs:
 
     - name: Get the next Monday date
       id: get_date
-      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.date == '' }}
       run: |
         output=$(python3 scripts/calculate_next_monday.py)
         echo "date=$output" >> $GITHUB_OUTPUT
