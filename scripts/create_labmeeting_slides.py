@@ -25,7 +25,7 @@ if __name__ == "__main__":
     date = args.date
 
     # List of lab members
-    lab_members = ["Guillaume", "Gautier", "Hanna", "Jaakko", "Ana", "Sujan", "Sarah", "Monika", "Marcela", "Iván", "Daniil", "Helene", "Hiba", "Marjaana"]
+    lab_members = ["Guillaume", "Gautier", "Jaakko", "Ana", "Sujan", "Sarah", "Monika", "Marcela", "Iván", "Daniil", "Helene", "Hiba", "Marjaana"]
 
     # Randomly rotate the order of the lab members
     random.shuffle(lab_members)
