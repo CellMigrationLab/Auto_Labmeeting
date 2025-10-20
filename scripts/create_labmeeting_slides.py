@@ -7,8 +7,10 @@ import argparse
 import os
 
 # Main function
-def main(token, channel, link, date):
+def main(token, channel, link, date, zoom_link=None):
     message = f"Here is the link to next week's slides ({date}): {link}"
+    if not zoom_link is None:
+        message += f"\nLink to the Zoom meeting: {zoom_link}"
     send_slack_message(token, channel, message)
 
 if __name__ == "__main__":
@@ -20,9 +22,15 @@ if __name__ == "__main__":
     parser.add_argument('--token', required=True, help='Slack API token')
     parser.add_argument('--channel', required=True, help='Slack channel ID')
     parser.add_argument('--date', required=True, help='Date')
+    parser.add_argument('--zoom', required=False, help='Link to Zoom meeting')
     
     args = parser.parse_args()
     date = args.date
+
+    if args.zoom:
+        zoom_link = args.zoom
+    else:
+        zoom_link = ""
 
     # List of lab members
     lab_members = ["Guillaume", "Gautier", "Jaakko", "Ana", "Sujan", "Sarah", "Monika", "Marcela", "Iván", "Daniil", "Helene", "Hiba", "Marjaana", "Christine", "Adan"]
@@ -51,4 +59,4 @@ if __name__ == "__main__":
     file_id = upload_to_drive(service, file_path, filename, FOLDER_ID)
     shareable_link = create_shareable_link(service, file_id)
 
-    main(token=args.token, channel=args.channel, link=shareable_link, date=args.date)
+    main(token=args.token, channel=args.channel, link=shareable_link, date=args.date, zoom_link=zoom_link)
