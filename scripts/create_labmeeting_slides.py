@@ -7,9 +7,9 @@ import argparse
 import os
 
 # Main function
-def main(token, channel, link, date, zoom_link=None):
+def main(token, channel, link, date, zoom_link=''):
     message = f"Here is the link to next week's slides ({date}): {link}"
-    if not zoom_link is None:
+    if zoom_link:
         message += f"\nLink to the Zoom meeting: {zoom_link}"
     send_slack_message(token, channel, message)
 
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     if args.zoom:
         zoom_link = args.zoom
     else:
-        zoom_link = ""
+        zoom_link = ''
 
     # List of lab members
     lab_members = ["Guillaume", "Gautier", "Jaakko", "Ana", "Sujan", "Sarah", "Monika", "Marcela", "Iván", "Daniil", "Helene", "Hiba", "Marjaana", "Christine", "Adan"]
