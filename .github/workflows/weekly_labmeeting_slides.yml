@@ -43,5 +43,6 @@ jobs:
         FOLDER_ID: ${{ secrets.FOLDER_ID }}
         SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
         SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
+        ZOOM_LINK: ${{ secrets.ZOOM_LINK || '' }}
       run: |
-        python scripts/create_labmeeting_slides.py --token $SLACK_TOKEN --channel $SLACK_CHANNEL --date ${{ github.event.inputs.date != '' && github.event.inputs.date || steps.get_date.outputs.date }}
+        python scripts/create_labmeeting_slides.py --token $SLACK_TOKEN --channel $SLACK_CHANNEL --date ${{ github.event.inputs.date != '' && github.event.inputs.date || steps.get_date.outputs.date }} --zoom $ZOOM_LINK
