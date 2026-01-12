@@ -13,7 +13,7 @@ def create_ppt_with_date_and_members(date, save_path, filename, members):
     title = slide.shapes.title
     subtitle = slide.placeholders[1]
     
-    title.text = "5 minutes presentations"
+    title.text = "Quick presentations"
     subtitle.text = f"Date: {date}"
     
     for member in members:

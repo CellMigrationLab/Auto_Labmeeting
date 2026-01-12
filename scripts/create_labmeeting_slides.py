@@ -67,7 +67,7 @@ if __name__ == "__main__":
     # Dictionary to store dates and links
     links_dict = {}
 
-    filename = f"{date}_5min_Presentation.pptx"
+    filename = f"{date}_Quick_Presentation.pptx"
     file_path = create_ppt_with_date_and_members(date, save_path, filename, lab_members)
     file_id = upload_to_drive(service, file_path, filename, FOLDER_ID)
     shareable_link = create_shareable_link(service, file_id)
