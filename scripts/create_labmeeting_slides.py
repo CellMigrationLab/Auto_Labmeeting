@@ -33,7 +33,7 @@ if __name__ == "__main__":
         zoom_link = ''
 
     # List of lab members
-    lab_members = ["Guillaume", "Gautier", "Jaakko", "Ana", "Sujan", "Sarah", "Monika", "Marcela", "Iván", "Daniil", "Helene", "Hiba", "Marjaana", "Christine", "Adan"]
+    lab_members = ["Guillaume", "Gautier", "Jaakko", "Ana", "Sujan", "Sarah", "Monika", "Marcela", "Iván", "Daniil", "Helene", "Marjaana", "Christine", "Adan"]
 
     # Randomly rotate the order of the lab members
     random.shuffle(lab_members)
