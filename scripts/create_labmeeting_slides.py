@@ -3,12 +3,16 @@ from googleapiclient.discovery import build
 
 from utils import send_slack_message, create_ppt_with_date_and_members, upload_to_drive, create_shareable_link
 
+from datetime import datetime
 import argparse
 import os
 
 # Main function
-def main(token, channel, link, date, zoom_link=''):
+def main(token, channel, link, date, zoom_link='', presenters=[]):
     message = f"Here is the link to next week's slides ({date}): {link}"
+    message += "\nThe presenters for next week are:\n"
+    for presenter in presenters:
+        message += f"- {presenter}\n"
     if zoom_link:
         message += f"\nLink to the Zoom meeting: {zoom_link}"
     send_slack_message(token, channel, message)
@@ -33,7 +37,16 @@ if __name__ == "__main__":
         zoom_link = ''
 
     # List of lab members
-    lab_members = ["Guillaume", "Gautier", "Jaakko", "Ana", "Sujan", "Sarah", "Monika", "Marcela", "Iván", "Daniil", "Helene", "Marjaana", "Christine", "Adan"]
+    # lab_members = ["Guillaume", "Gautier", "Jaakko", "Ana", "Sujan", "Sarah", "Monika", "Marcela", "Iván", "Daniil", "Helene", "Marjaana", "Christine", "Adan"]
+    group_1 = ['Sarah', 'Christine', 'Helene', 'Daniil', 'Marjaana', 'Sujan', 'Guillaume']
+    group_2 = ['Iván', 'Ana', 'Gautier', 'Jaakko', 'Monika', 'Marcela', 'Adan', 'Daniil']
+    # Group 1 presents on even weeks, Group 2 on odd weeks
+    
+    week_number = datetime.strptime(date, "%Y-%m-%d").isocalendar()[1]
+    if week_number % 2 == 0:
+        lab_members = group_1
+    else:
+        lab_members = group_2 
 
     # Randomly rotate the order of the lab members
     random.shuffle(lab_members)
@@ -59,4 +72,4 @@ if __name__ == "__main__":
     file_id = upload_to_drive(service, file_path, filename, FOLDER_ID)
     shareable_link = create_shareable_link(service, file_id)
 
-    main(token=args.token, channel=args.channel, link=shareable_link, date=args.date, zoom_link=zoom_link)
+    main(token=args.token, channel=args.channel, link=shareable_link, date=args.date, zoom_link=zoom_link, presenters=lab_members)

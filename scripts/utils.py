@@ -18,6 +18,12 @@ def create_ppt_with_date_and_members(date, save_path, filename, members):
     
     for member in members:
         slide_layout = prs.slide_layouts[2]
+
+        slide = prs.slides.add_slide(slide_layout)
+        
+        title = slide.shapes.title
+        title.text = f"{member} - Short Introduction"
+
         slide = prs.slides.add_slide(slide_layout)
         
         title = slide.shapes.title
