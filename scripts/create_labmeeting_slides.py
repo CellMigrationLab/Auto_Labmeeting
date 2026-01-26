@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
     # List of lab members
     # lab_members = ["Guillaume", "Gautier", "Jaakko", "Ana", "Sujan", "Sarah", "Monika", "Marcela", "Iván", "Daniil", "Helene", "Marjaana", "Christine", "Adan"]
-    group_1 = ['Sarah', 'Christine', 'Helene', 'Daniil', 'Marjaana', 'Sujan', 'Guillaume']
+    group_1 = ['Sarah', 'Christine', 'Helene', 'Marjaana', 'Sujan', 'Guillaume']
     group_2 = ['Iván', 'Ana', 'Gautier', 'Jaakko', 'Monika', 'Marcela', 'Adan', 'Daniil']
     # Group 1 presents on even weeks, Group 2 on odd weeks
     
