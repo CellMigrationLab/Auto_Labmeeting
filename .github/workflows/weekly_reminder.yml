@@ -1,4 +1,3 @@
-
 name: Weekly Slack Reminder
 
 on:
@@ -30,4 +29,4 @@ jobs:
         SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
         SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
       run: |
-        python scripts/labmeeting_reminder.py --token $SLACK_TOKEN --channel $SLACK_CHANNEL
+        python scripts/labmeeting_reminder.py --token $SLACK_TOKEN --channel $SLACK_CHANNEL --date "$(date +%F)"
