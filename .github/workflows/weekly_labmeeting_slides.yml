@@ -37,12 +37,21 @@ jobs:
       run: |
         output=$(python3 scripts/calculate_next_monday.py)
         echo "date=$output" >> $GITHUB_OUTPUT
+        
     - name: Generates Google Drive presentation and sends a Slack message
       env:
-        SERVICE_ACCOUNT_JSON: ${{ secrets.SERVICE_ACCOUNT_JSON }}
         FOLDER_ID: ${{ secrets.FOLDER_ID }}
         SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
         SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
         ZOOM_LINK: ${{ secrets.ZOOM_LINK || '' }}
+        GOOGLE_OAUTH_TOKEN_JSON_B64: ${{ secrets.GOOGLE_OAUTH_TOKEN_JSON_B64 }}
+        GOOGLE_OAUTH_CREDENTIALS_JSON_B64: ${{ secrets.GOOGLE_OAUTH_CREDENTIALS_JSON_B64 }}
       run: |
-        python scripts/create_labmeeting_slides.py --token $SLACK_TOKEN --channel $SLACK_CHANNEL --date ${{ github.event.inputs.date != '' && github.event.inputs.date || steps.get_date.outputs.date }} --zoom $ZOOM_LINK
+        echo "$GOOGLE_OAUTH_TOKEN_JSON_B64" | base64 --decode > token.json
+        echo "$GOOGLE_OAUTH_CREDENTIALS_JSON_B64" | base64 --decode > credentials.json
+        chmod 600 token.json credentials.json
+        python scripts/create_labmeeting_slides.py \
+          --token "$SLACK_TOKEN" \
+          --channel "$SLACK_CHANNEL" \
+          --date "${{ github.event.inputs.date != '' && github.event.inputs.date || steps.get_date.outputs.date }}" \
+          --zoom "$ZOOM_LINK"

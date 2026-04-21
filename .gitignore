@@ -1,3 +1,9 @@
+# Google API keys and tokens
+credentials.json
+token.json
+credentials.b64
+token.b64
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

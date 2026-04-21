@@ -1,4 +1,5 @@
-from google.oauth2 import service_account
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 
 from utils import send_slack_message, create_ppt_with_date_and_members, upload_to_drive, create_shareable_link
@@ -62,14 +63,20 @@ if __name__ == "__main__":
 
     lab_members = get_presenters_for_date(date, config_path=args.schedule_config)
 
-    # Get the values for the connection with Google Drive´s API
     SCOPES = ['https://www.googleapis.com/auth/drive.file']
-    SERVICE_ACCOUNT_JSON = os.getenv('SERVICE_ACCOUNT_JSON')
-    FOLDER_ID = os.getenv('FOLDER_ID')
 
-    # Get the credentials from Google Drive´s API
-    credentials = service_account.Credentials.from_service_account_info(json.loads(SERVICE_ACCOUNT_JSON), scopes=SCOPES)
-    service = build('drive', 'v3', credentials=credentials)
+    creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+
+    if not creds.valid:
+        if creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            raise RuntimeError(
+                "token.json is invalid and cannot be refreshed. Recreate it locally."
+            )
+
+    service = build("drive", "v3", credentials=creds)
+    FOLDER_ID = os.getenv("FOLDER_ID")
 
     # Folder to temporary store the presentation
     save_path = "presentations/"
