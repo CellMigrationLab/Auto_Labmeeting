@@ -3,7 +3,7 @@ name: Weekly Slack Reminder
 on:
   schedule:
     # Runs at 6:00 AM UTC (9:00 Turku) every Monday
-    - cron: '0 6 * * 1'
+    - cron: '0 4 * * 1'
   workflow_dispatch:
 
 jobs:
