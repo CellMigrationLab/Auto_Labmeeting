@@ -4,7 +4,7 @@ name: Weekly Create and Share Labmeeting Slides
 on:
   schedule:
     # Runs at 12:00 AM UTC (15:00 Turku) every Monday
-    - cron: '0 7 * * 3'
+    - cron: '0 7 * * 1'
   workflow_dispatch: 
     # Allows manual triggering of the workflow
     # Manually pass the date as an input
