@@ -5,11 +5,11 @@
     "group_1": [
       "Sarah",
       "Christine",
-      "Helene",
-      "Marjaana",
+      "Mario",
       "Sujan",
       "Guillaume",
-      "Huy"
+      "Huy",
+      "Lea"
     ],
     "group_2": [
       "Iván",
@@ -19,21 +19,9 @@
       "Marcela",
       "Adan",
       "Daniil",
-      "Mario"
+      "Isabel"
     ]
   },
   "skipped_dates": {
-    "2026-04-06": {
-      "message": "There will be no lab meeting on 2026-04-06 because of Easter Monday :rabbit2::egg:."
-    },
-    "2026-04-13": {
-      "message": "There will be no lab meeting on 2026-04-13 because Guillaume is on China. But Iván will give a chalk talk about Neural Networks, Deep Learning and Python."
-    },
-    "2026-05-11": {
-      "message": "There will be no lab meeting on 2026-05-11 because Guillaume is on Spain."
-    },
-    "2026-06-08": {
-      "message": "There will be no lab meeting on 2026-06-08 because Guillaume is on Hungary."
-    }
   }
 }
