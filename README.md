@@ -27,7 +27,7 @@ The new cleaning workflow is implemented in:
 - `scripts/cleaning/canvas_schedule.py`
 - `scripts/cleaning/slack_api.py`
 
-The Slack Canvas is the source of truth for cleaning dates and assigned people. The parser reads Slack profile links/mentions directly, so there is no separate user-ID spreadsheet.
+The Slack Canvas is the source of truth for cleaning dates and assigned people. The parser reads Slack profile links/mentions directly when available and falls back to resolving visible names through Slack `users.list`, so there is no separate user-ID spreadsheet.
 
 Example Canvas content:
 

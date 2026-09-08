@@ -19,6 +19,7 @@ class SlackClient:
         self.max_attempts = max_attempts
         self.base_url = "https://slack.com/api"
         self.headers = {"Authorization": f"Bearer {token}"}
+        self._workspace_users: Optional[list[Dict[str, Any]]] = None
 
     def _api_call(
         self,
@@ -95,6 +96,62 @@ class SlackClient:
         if last_error:
             raise SlackAPIError(f"Slack request failed for {method}: {last_error}")
         raise SlackAPIError(f"Slack request failed for {method}.")
+
+
+    def list_users(self, *, max_pages: int = 50) -> list[Dict[str, Any]]:
+        if self._workspace_users is not None:
+            return list(self._workspace_users)
+
+        members: list[Dict[str, Any]] = []
+        cursor = ""
+        for _ in range(max_pages):
+            params: Dict[str, Any] = {"limit": 200}
+            if cursor:
+                params["cursor"] = cursor
+            payload = self._api_call("users.list", params=params)
+            members.extend(payload.get("members", []))
+            cursor = str((payload.get("response_metadata") or {}).get("next_cursor") or "")
+            if not cursor:
+                self._workspace_users = members
+                return list(members)
+
+        raise SlackAPIError(
+            f"Slack users.list exceeded {max_pages} pages while resolving a Canvas mention."
+        )
+
+    @staticmethod
+    def _normalize_person_name(value: str) -> str:
+        return " ".join(str(value or "").strip().lstrip("@").split()).casefold()
+
+    def resolve_user_id(self, display_name: str) -> Optional[str]:
+        wanted = self._normalize_person_name(display_name)
+        if not wanted:
+            return None
+
+        matches: list[Dict[str, Any]] = []
+        for member in self.list_users():
+            if member.get("deleted") or member.get("is_bot"):
+                continue
+            profile = member.get("profile") or {}
+            names = {
+                self._normalize_person_name(member.get("name") or ""),
+                self._normalize_person_name(member.get("real_name") or ""),
+                self._normalize_person_name(profile.get("display_name") or ""),
+                self._normalize_person_name(profile.get("real_name") or ""),
+            }
+            names.discard("")
+            if wanted in names:
+                matches.append(member)
+
+        if len(matches) == 1:
+            return str(matches[0].get("id") or "") or None
+        if len(matches) > 1:
+            ids = ", ".join(str(item.get("id") or "") for item in matches)
+            raise SlackAPIError(
+                f"Canvas name {display_name!r} matches multiple Slack users ({ids}). "
+                "Use a Slack mention that preserves the user ID or make the display name unique."
+            )
+        return None
 
     def conversations_info(self, channel: str) -> Dict[str, Any]:
         return self._api_call("conversations.info", params={"channel": channel})["channel"]

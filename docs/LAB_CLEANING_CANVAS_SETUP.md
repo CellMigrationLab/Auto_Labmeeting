@@ -7,7 +7,7 @@ No Google Sheet or database is required.
 ## How it works
 
 1. The daily GitHub Action finds the cleaning Canvas in the configured Slack channel.
-2. It downloads the Canvas and parses entries written as `DD.MM` plus a Slack profile link/mention.
+2. It downloads the Canvas and parses entries written as `DD.MM` plus a Slack profile link/mention. If the Canvas HTML export preserves only the visible person name, the workflow resolves that name through Slack `users.list`.
 3. On an individual cleaning date it posts a message mentioning the assigned user.
 4. The message uses Slack's built-in `notification` metadata schema; the metadata context identifies the cleaning date and assigned user.
 5. On later daily runs, the action reads the original thread.
@@ -38,21 +38,23 @@ The existing Slack profile links are ideal. For example:
 11.09 [@Person](https://your-workspace.slack.com/team/U0123456789)
 ```
 
-The workflow extracts `U0123456789` directly from the link. No separate people/ID table is needed.
-Slack Canvas user mentions such as `![](@U0123456789)` and normal Slack mentions such as `<@U0123456789>` are also supported.
+The workflow extracts `U0123456789` directly from the link whenever Slack preserves it. No separate people/ID table is needed. Slack Canvas user mentions such as `![](@U0123456789)` and normal Slack mentions such as `<@U0123456789>` are also supported.
+
+Slack Canvas HTML downloads sometimes preserve only visible text such as `@Adan` instead of the underlying profile URL. In that case the workflow resolves the visible name against the Slack workspace directory. Display names used in the Canvas should therefore be unique.
 
 Your current `DD.MM` Canvas format works without changes. If the Canvas has no year, the workflow assumes the current year in `CLEANING_TIMEZONE`.
 For year-spanning schedules, put the year in the Canvas heading or set the GitHub variable `CLEANING_SCHEDULE_YEAR`.
 
 ## Slack app scopes
 
-For a public cleaning channel, add these Bot Token Scopes to the existing Slack app:
+For a public cleaning channel, add these Bot Token Scopes to the cleaning Slack app:
 
 - `chat:write` - send assignments and reminders.
 - `channels:history` - read channel history and thread replies.
 - `channels:read` - inspect the channel and discover its channel Canvas.
 - `files:read` - retrieve the Canvas file and its private download URL.
 - `metadata.message:read` - read the cleaning metadata back from channel history.
+- `users:read` - resolve visible Canvas names (for example `@Adan`) when the downloaded Canvas HTML does not expose the underlying Slack user ID.
 
 The workflow uses Slack's built-in `notification` metadata schema, so you do **not** need to register custom metadata event types in the Slack app manifest.
 
@@ -64,8 +66,8 @@ After changing scopes, reinstall/re-authorize the Slack app in the workspace. Ma
 
 ### Required secrets
 
-`SLACK_TOKEN`
-: Existing Slack bot token (`xoxb-...`). The token must include the scopes above after reauthorization.
+`SLACK_CLEANING_TOKEN`
+: Bot token (`xoxb-...`) for the dedicated cleaning Slack app. The workflow maps this secret to `SLACK_TOKEN` internally. The token must include the scopes above after reauthorization.
 
 `SLACK_CLEANING_CHANNEL`
 : Channel ID such as `C0123456789`. Use the channel ID, not `#channel-name`.
@@ -127,4 +129,4 @@ You can omit `SLACK_CLEANING_CANVAS_ID` initially and let the workflow auto-disc
 
 ## Canvas download note
 
-Slack represents Canvases as file objects. The script uses `files.info` to obtain `url_private_download` (or `url_private`) and downloads it with the bot token. Slack Canvas downloads can be HTML, so the parser preserves Slack user IDs from links/attributes while extracting the visible schedule text.
+Slack represents Canvases as file objects. The script uses `files.info` to obtain `url_private_download` (or `url_private`) and downloads it with the bot token. Slack Canvas downloads can be HTML. The parser first preserves Slack user IDs from links/attributes. When Slack exports only the visible display name, the workflow falls back to `users.list` and resolves that name to a user ID before sending or checking reminders.

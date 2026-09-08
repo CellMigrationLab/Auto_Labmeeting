@@ -19,11 +19,15 @@ from lab_cleaning import (
 
 
 class FakeSlackClient:
-    def __init__(self, history=None, threads=None):
+    def __init__(self, history=None, threads=None, users=None):
         self.history = list(history or [])
         self.threads = {key: list(value) for key, value in (threads or {}).items()}
         self.posted = []
         self.counter = 1000
+        self.users = dict(users or {})
+
+    def resolve_user_id(self, display_name):
+        return self.users.get(display_name)
 
     def conversation_history(self, channel, oldest=None, max_pages=20):
         return list(self.history)
@@ -101,6 +105,28 @@ Cleaning schedule - 2026
         self.assertEqual("U0123456789", entries[0].user_id)
         self.assertEqual(date(2026, 9, 11), entries[0].scheduled_date)
 
+
+    def test_parses_canvas_html_when_profile_url_is_stripped(self):
+        html = """
+<html><body><h1>Cleaning schedule - 2026</h1>
+<p>28.08 <span class="mention">@Adan</span></p>
+</body></html>
+"""
+        entries = parse_cleaning_schedule(html, fallback_year=2025)
+        self.assertEqual("individual", entries[0].kind)
+        self.assertIsNone(entries[0].user_id)
+        self.assertEqual("Adan", entries[0].user_name)
+
+    def test_parses_canvas_html_plain_display_name(self):
+        html = """
+<html><body><h1>Cleaning schedule - 2026</h1>
+<p>28.08 <span>Adan</span></p>
+</body></html>
+"""
+        entries = parse_cleaning_schedule(html, fallback_year=2025)
+        self.assertEqual("individual", entries[0].kind)
+        self.assertEqual("Adan", entries[0].user_name)
+
     def test_uses_fallback_year_when_heading_has_no_year(self):
         entries = parse_cleaning_schedule(
             "11.09 [@Example](https://example.slack.com/team/U0123456789)",
@@ -166,6 +192,36 @@ class StateHelperTests(unittest.TestCase):
 
 class DailyWorkflowTests(unittest.TestCase):
     canvas = "Cleaning schedule - 2026\n11.09 [@Example](https://example.slack.com/team/U0123456789)"
+
+
+    def test_visible_canvas_name_is_resolved_via_slack_directory(self):
+        content = "Cleaning schedule - 2026\n28.08 @Adan"
+        client = FakeSlackClient(users={"Adan": "U09G376BEDC"})
+        stats = run_daily(
+            client,
+            channel="C123",
+            canvas_content=content,
+            canvas_id="F123",
+            today=date(2026, 8, 28),
+            timezone_name="Europe/Helsinki",
+        )
+        self.assertEqual(1, stats["assignments_sent"])
+        self.assertEqual(0, stats["unassigned_today"])
+        self.assertIn("<@U09G376BEDC>", client.posted[0]["text"])
+
+    def test_unresolvable_visible_name_stays_unassigned(self):
+        content = "Cleaning schedule - 2026\n28.08 @Unknown Person"
+        client = FakeSlackClient(users={})
+        stats = run_daily(
+            client,
+            channel="C123",
+            canvas_content=content,
+            canvas_id="F123",
+            today=date(2026, 8, 28),
+            timezone_name="Europe/Helsinki",
+        )
+        self.assertEqual(0, stats["assignments_sent"])
+        self.assertEqual(1, stats["unassigned_today"])
 
     def test_initial_assignment_is_idempotent(self):
         client = FakeSlackClient()

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import replace
 from datetime import date, datetime, time
 import os
 from typing import Any, Dict, Iterable, Optional
@@ -124,6 +125,37 @@ def _message_from_post_response(response: Dict[str, Any], metadata: Dict[str, An
     return message
 
 
+def resolve_canvas_user_ids(
+    client: SlackClient,
+    entries: list[CleaningEntry],
+) -> list[CleaningEntry]:
+    resolved_entries: list[CleaningEntry] = []
+    for entry in entries:
+        if entry.kind != "individual" or entry.user_id:
+            resolved_entries.append(entry)
+            continue
+
+        if not entry.user_name:
+            resolved_entries.append(replace(entry, kind="unassigned"))
+            continue
+
+        resolved_user_id = client.resolve_user_id(entry.user_name)
+        if resolved_user_id:
+            print(
+                f"Resolved Canvas user {entry.user_name!r} to Slack user {resolved_user_id} "
+                f"for {entry.scheduled_date.isoformat()}."
+            )
+            resolved_entries.append(replace(entry, user_id=resolved_user_id))
+        else:
+            print(
+                f"Could not resolve Canvas user {entry.user_name!r} in the Slack workspace "
+                f"for {entry.scheduled_date.isoformat()}."
+            )
+            resolved_entries.append(replace(entry, kind="unassigned"))
+
+    return resolved_entries
+
+
 def _oldest_timestamp(entries: list[CleaningEntry], timezone_name: str, today: date) -> Optional[str]:
     relevant_dates = [entry.scheduled_date for entry in entries if entry.scheduled_date <= today]
     if not relevant_dates:
@@ -149,6 +181,7 @@ def run_daily(
         fallback_year=today.year,
         schedule_year=schedule_year,
     )
+    entries = resolve_canvas_user_ids(client, entries)
 
     stats = {
         "assignments_sent": 0,

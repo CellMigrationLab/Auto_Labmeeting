@@ -24,6 +24,7 @@ class CleaningEntry:
     scheduled_date: date
     kind: str
     user_id: Optional[str] = None
+    user_name: Optional[str] = None
     note: str = ""
 
     @property
@@ -31,7 +32,7 @@ class CleaningEntry:
         return (
             self.scheduled_date.isoformat(),
             self.kind,
-            self.user_id or "",
+            self.user_id or self.user_name or "",
         )
 
 
@@ -143,6 +144,37 @@ def _extract_user_id(chunk: str) -> Optional[str]:
     return None
 
 
+def _extract_user_name(chunk: str) -> Optional[str]:
+    # Canvas HTML downloads do not always preserve the underlying Slack user ID.
+    # Keep the visible mention as a fallback and resolve it with users.list later.
+    markdown = re.search(r"\[@(?P<name>[^\]\n]+)\]\(", chunk)
+    if markdown:
+        name = markdown.group("name").strip()
+        if name:
+            return name
+
+    visible = re.search(r"@(?P<name>[^\n\r<>{}\[\]()`*_]+)", chunk)
+    if visible:
+        name = visible.group("name").strip(" .,:;-\t")
+        if name:
+            return name
+
+    # Some Canvas HTML exports render a user chip as plain display text without
+    # the @ sign. In this schedule each date owns the text until the next date,
+    # so a short non-empty first line is a safe display-name candidate.
+    candidate = DATE_RE.sub("", chunk, count=1)
+    candidate = re.sub(r"\[SLACK_USER:U[A-Z0-9]+\]", "", candidate)
+    candidate = re.sub(r"https?://\S+", "", candidate)
+    candidate = re.sub(r"[\[\]()*_`]+", " ", candidate)
+    for line in candidate.splitlines():
+        name = re.sub(r"\s+", " ", line).strip(" .,:;-\t")
+        if not name or BIG_CLEANING_RE.search(name):
+            continue
+        if len(name) <= 80:
+            return name.lstrip("@").strip() or None
+    return None
+
+
 def _clean_note(chunk: str) -> str:
     chunk = re.sub(r"\[SLACK_USER:U[A-Z0-9]+\]", "", chunk)
     chunk = re.sub(r"https?://\S+", "", chunk)
@@ -182,6 +214,7 @@ def parse_cleaning_schedule(
             ) from exc
 
         user_id = _extract_user_id(chunk)
+        user_name = _extract_user_name(chunk)
         note = _clean_note(chunk)
         is_big = bool(BIG_CLEANING_RE.search(chunk))
 
@@ -190,6 +223,7 @@ def parse_cleaning_schedule(
                 scheduled_date=scheduled_date,
                 kind="big_cleaning",
                 user_id=user_id,
+                user_name=user_name,
                 note=note,
             )
         elif user_id:
@@ -197,6 +231,15 @@ def parse_cleaning_schedule(
                 scheduled_date=scheduled_date,
                 kind="individual",
                 user_id=user_id,
+                user_name=user_name,
+                note=note,
+            )
+        elif user_name:
+            entry = CleaningEntry(
+                scheduled_date=scheduled_date,
+                kind="individual",
+                user_id=None,
+                user_name=user_name,
                 note=note,
             )
         else:
