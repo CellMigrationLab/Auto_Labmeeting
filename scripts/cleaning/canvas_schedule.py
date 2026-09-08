@@ -141,6 +141,14 @@ def _extract_user_id(chunk: str) -> Optional[str]:
     if mention:
         return mention.group(1)
 
+    # Slack Canvas HTML exports can flatten a user mention/profile link to the
+    # literal member ID (for example ``U09G376BEDC``) without preserving the
+    # original href or mention markup. Treat a bare Slack member ID as
+    # authoritative instead of trying to resolve it as a display name.
+    bare_user_id = USER_ID_RE.search(chunk)
+    if bare_user_id:
+        return bare_user_id.group(0)
+
     return None
 
 

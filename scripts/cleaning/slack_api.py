@@ -124,7 +124,15 @@ class SlackClient:
         return " ".join(str(value or "").strip().lstrip("@").split()).casefold()
 
     def resolve_user_id(self, display_name: str) -> Optional[str]:
-        wanted = self._normalize_person_name(display_name)
+        raw_value = str(display_name or "").strip().lstrip("@")
+
+        # Defense in depth: if the Canvas parser hands us an actual Slack
+        # member ID, it is already the stable identifier we need. Do not send
+        # it through users.list as though it were a person's display name.
+        if raw_value.startswith("U") and raw_value[1:].isalnum() and len(raw_value) >= 9:
+            return raw_value
+
+        wanted = self._normalize_person_name(raw_value)
         if not wanted:
             return None
 

@@ -117,6 +117,16 @@ Cleaning schedule - 2026
         self.assertIsNone(entries[0].user_id)
         self.assertEqual("Adan", entries[0].user_name)
 
+    def test_parses_canvas_html_with_bare_slack_user_id(self):
+        html = """
+<html><body><h1>Cleaning schedule - 2026</h1>
+<p>28.08 <span class="mention">U09G376BEDC</span></p>
+</body></html>
+"""
+        entries = parse_cleaning_schedule(html, fallback_year=2025)
+        self.assertEqual("individual", entries[0].kind)
+        self.assertEqual("U09G376BEDC", entries[0].user_id)
+
     def test_parses_canvas_html_plain_display_name(self):
         html = """
 <html><body><h1>Cleaning schedule - 2026</h1>
@@ -197,6 +207,21 @@ class DailyWorkflowTests(unittest.TestCase):
     def test_visible_canvas_name_is_resolved_via_slack_directory(self):
         content = "Cleaning schedule - 2026\n28.08 @Adan"
         client = FakeSlackClient(users={"Adan": "U09G376BEDC"})
+        stats = run_daily(
+            client,
+            channel="C123",
+            canvas_content=content,
+            canvas_id="F123",
+            today=date(2026, 8, 28),
+            timezone_name="Europe/Helsinki",
+        )
+        self.assertEqual(1, stats["assignments_sent"])
+        self.assertEqual(0, stats["unassigned_today"])
+        self.assertIn("<@U09G376BEDC>", client.posted[0]["text"])
+
+    def test_bare_slack_user_id_does_not_require_directory_resolution(self):
+        content = "Cleaning schedule - 2026\n28.08 U09G376BEDC"
+        client = FakeSlackClient(users={})
         stats = run_daily(
             client,
             channel="C123",
