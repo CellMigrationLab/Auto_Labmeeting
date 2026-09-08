@@ -1,0 +1,46 @@
+name: Daily Lab Cleaning Reminder
+
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Optional test date (YYYY-MM-DD). Leave empty to use Europe/Helsinki today.'
+        required: false
+        default: ''
+
+jobs:
+  cleaning-reminder:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+
+      - name: Install cleaning dependency
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install 'requests>=2.31.0,<3'
+
+      - name: Read Canvas and manage cleaning reminders
+        env:
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          SLACK_CLEANING_CHANNEL: ${{ secrets.SLACK_CLEANING_CHANNEL }}
+          SLACK_CLEANING_CANVAS_ID: ${{ secrets.SLACK_CLEANING_CANVAS_ID || '' }}
+          SLACK_CLEANING_CANVAS_TITLE: ${{ vars.SLACK_CLEANING_CANVAS_TITLE || 'Cleaning schedule' }}
+          CLEANING_TIMEZONE: ${{ vars.CLEANING_TIMEZONE || 'Europe/Helsinki' }}
+          CLEANING_SCHEDULE_YEAR: ${{ vars.CLEANING_SCHEDULE_YEAR || '' }}
+          CLEANING_MAX_HISTORY_PAGES: ${{ vars.CLEANING_MAX_HISTORY_PAGES || '20' }}
+          RUN_DATE: ${{ github.event.inputs.date || '' }}
+        run: |
+          if [ -n "$RUN_DATE" ]; then
+            python scripts/cleaning/lab_cleaning.py --date "$RUN_DATE"
+          else
+            python scripts/cleaning/lab_cleaning.py
+          fi

@@ -2,11 +2,15 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 
-from utils import send_slack_message, create_ppt_with_date_and_members, upload_to_drive, create_shareable_link
+from utils import (
+    send_slack_message,
+    create_ppt_with_date_and_members,
+    upload_to_drive,
+    create_shareable_link,
+)
 from schedule_config import get_presenters_for_date, get_skip_info
 
 import argparse
-import json
 import os
 
 
@@ -20,14 +24,18 @@ def build_regular_message(link, date, presenters, zoom_link=''):
     return message
 
 
-# Main function
 def main(token, channel, link, date, zoom_link='', presenters=None, custom_message=''):
     if custom_message:
         send_slack_message(token, channel, custom_message)
         return
 
     presenters = presenters or []
-    message = build_regular_message(link=link, date=date, presenters=presenters, zoom_link=zoom_link)
+    message = build_regular_message(
+        link=link,
+        date=date,
+        presenters=presenters,
+        zoom_link=zoom_link,
+    )
     send_slack_message(token, channel, message)
 
 
@@ -41,7 +49,7 @@ if __name__ == "__main__":
         '--schedule-config',
         required=False,
         default=None,
-        help='Path to the JSON file that defines presenter rotation and skipped dates.'
+        help='Path to the JSON file that defines presenter rotation and skipped dates.',
     )
 
     args = parser.parse_args()
@@ -63,9 +71,8 @@ if __name__ == "__main__":
 
     lab_members = get_presenters_for_date(date, config_path=args.schedule_config)
 
-    SCOPES = ['https://www.googleapis.com/auth/drive.file']
-
-    creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+    scopes = ['https://www.googleapis.com/auth/drive.file']
+    creds = Credentials.from_authorized_user_file("token.json", scopes)
 
     if not creds.valid:
         if creds.expired and creds.refresh_token:
@@ -76,15 +83,19 @@ if __name__ == "__main__":
             )
 
     service = build("drive", "v3", credentials=creds)
-    FOLDER_ID = os.getenv("FOLDER_ID")
+    folder_id = os.getenv("FOLDER_ID")
 
-    # Folder to temporary store the presentation
     save_path = "presentations/"
     os.makedirs(save_path, exist_ok=True)
 
     filename = f"{date}_Quick_Presentation.pptx"
-    file_path = create_ppt_with_date_and_members(date, save_path, filename, lab_members)
-    file_id = upload_to_drive(service, file_path, filename, FOLDER_ID)
+    file_path = create_ppt_with_date_and_members(
+        date,
+        save_path,
+        filename,
+        lab_members,
+    )
+    file_id = upload_to_drive(service, file_path, filename, folder_id)
     shareable_link = create_shareable_link(service, file_id)
 
     main(

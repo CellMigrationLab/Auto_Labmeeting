@@ -1,13 +1,9 @@
-
 name: Weekly Create and Share Labmeeting Slides
 
 on:
   schedule:
-    # Runs at 12:00 AM UTC (15:00 Turku) every Monday
     - cron: '0 7 * * 1'
-  workflow_dispatch: 
-    # Allows manual triggering of the workflow
-    # Manually pass the date as an input
+  workflow_dispatch:
     inputs:
       date:
         description: 'Date for the lab meeting slides (YYYY-MM-DD)'
@@ -19,39 +15,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.13'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-    - name: Get the next Monday date
-      id: get_date
-      run: |
-        output=$(python3 scripts/calculate_next_monday.py)
-        echo "date=$output" >> $GITHUB_OUTPUT
-        
-    - name: Generates Google Drive presentation and sends a Slack message
-      env:
-        FOLDER_ID: ${{ secrets.FOLDER_ID }}
-        SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-        SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
-        ZOOM_LINK: ${{ secrets.ZOOM_LINK || '' }}
-        GOOGLE_OAUTH_TOKEN_JSON_B64: ${{ secrets.GOOGLE_OAUTH_TOKEN_JSON_B64 }}
-        GOOGLE_OAUTH_CREDENTIALS_JSON_B64: ${{ secrets.GOOGLE_OAUTH_CREDENTIALS_JSON_B64 }}
-      run: |
-        echo "$GOOGLE_OAUTH_TOKEN_JSON_B64" | base64 --decode > token.json
-        echo "$GOOGLE_OAUTH_CREDENTIALS_JSON_B64" | base64 --decode > credentials.json
-        chmod 600 token.json credentials.json
-        python scripts/create_labmeeting_slides.py \
-          --token "$SLACK_TOKEN" \
-          --channel "$SLACK_CHANNEL" \
-          --date "${{ github.event.inputs.date != '' && github.event.inputs.date || steps.get_date.outputs.date }}" \
-          --zoom "$ZOOM_LINK"
+      - name: Get the next Monday date
+        id: get_date
+        run: |
+          output=$(python3 scripts/calculate_next_monday.py)
+          echo "date=$output" >> "$GITHUB_OUTPUT"
+
+      - name: Generate Google Drive presentation and send Slack message
+        env:
+          FOLDER_ID: ${{ secrets.FOLDER_ID }}
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
+          ZOOM_LINK: ${{ secrets.ZOOM_LINK || '' }}
+          GOOGLE_OAUTH_TOKEN_JSON_B64: ${{ secrets.GOOGLE_OAUTH_TOKEN_JSON_B64 }}
+          GOOGLE_OAUTH_CREDENTIALS_JSON_B64: ${{ secrets.GOOGLE_OAUTH_CREDENTIALS_JSON_B64 }}
+        run: |
+          echo "$GOOGLE_OAUTH_TOKEN_JSON_B64" | base64 --decode > token.json
+          echo "$GOOGLE_OAUTH_CREDENTIALS_JSON_B64" | base64 --decode > credentials.json
+          chmod 600 token.json credentials.json
+          python scripts/create_labmeeting_slides.py \
+            --token "$SLACK_TOKEN" \
+            --channel "$SLACK_CHANNEL" \
+            --date "${{ github.event.inputs.date != '' && github.event.inputs.date || steps.get_date.outputs.date }}" \
+            --zoom "$ZOOM_LINK"

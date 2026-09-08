@@ -5,13 +5,12 @@ import argparse
 from datetime import datetime
 
 
-# Main function
 def main(token, channel, date):
     skip_info = get_skip_info(date)
     if skip_info:
         message = skip_info['message']
     else:
-        message = "Remember to update today´s slides with your information :D"
+        message = "Remember to update today's slides with your information :D"
     send_slack_message(token, channel, message)
 
 
@@ -23,9 +22,7 @@ if __name__ == "__main__":
         '--date',
         required=False,
         default=datetime.today().strftime('%Y-%m-%d'),
-        help='Meeting date in YYYY-MM-DD format. Defaults to today.'
+        help='Meeting date in YYYY-MM-DD format. Defaults to today.',
     )
-
     args = parser.parse_args()
-
     main(token=args.token, channel=args.channel, date=args.date)

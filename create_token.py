@@ -3,8 +3,8 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 
-# Use drive.file for uploading files your app creates.
 SCOPES = ["https://www.googleapis.com/auth/drive.file"]
+
 
 def main():
     creds = None
@@ -25,6 +25,7 @@ def main():
             token.write(creds.to_json())
 
     print("token.json created successfully")
+
 
 if __name__ == "__main__":
     main()
