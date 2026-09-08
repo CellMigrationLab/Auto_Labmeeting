@@ -30,7 +30,7 @@ jobs:
 
       - name: Read Canvas and manage cleaning reminders
         env:
-          SLACK_CLEANING_TOKEN: ${{ secrets.SLACK_CLEANING_TOKEN }}
+          SLACK_TOKEN: ${{ secrets.SLACK_CLEANING_TOKEN }}
           SLACK_CLEANING_CHANNEL: ${{ secrets.SLACK_CLEANING_CHANNEL }}
           SLACK_CLEANING_CANVAS_ID: ${{ secrets.SLACK_CLEANING_CANVAS_ID || '' }}
           SLACK_CLEANING_CANVAS_TITLE: ${{ vars.SLACK_CLEANING_CANVAS_TITLE || 'Cleaning schedule' }}
