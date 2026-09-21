@@ -20,12 +20,15 @@ def create_ppt_with_date_and_members(date, save_path, filename, members):
 
         slide = prs.slides.add_slide(slide_layout)
         slide.shapes.title.text = f"{member} - Short Introduction"
+        slide.placeholders[1].text = "Introduction about why have you done what you have done these weeks and how is linked to your main project (e.g., I did this experiment because I need to understand the migration speed of cells, because in my main project I need to study how fast the cells extravate), NOT to your research topic."
 
         slide = prs.slides.add_slide(slide_layout)
         slide.shapes.title.text = f"{member} - Previous week"
+        slide.placeholders[1].text = "Summary of the activities from the previous two weeks."
 
         slide = prs.slides.add_slide(slide_layout)
         slide.shapes.title.text = f"{member} - This week"
+        slide.placeholders[1].text = "Planned activities for the current and the next week."
 
     file_path = os.path.join(save_path, filename)
     if os.path.exists(file_path):
